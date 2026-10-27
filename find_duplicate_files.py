@@ -12,7 +12,9 @@ def create_sample_files():
     docs = {
         "original.txt": text_1,
         "similar.txt": text_1 + " additional words and notes.",
-        "unrelated.txt": text_2
+        "unrelated.txt": text_2,
+        "duplicate.txt": text_1,
+        "hybrid.txt": text_1 + " "+ text_2
     }
 
     for filename, text in docs.items():
@@ -40,7 +42,7 @@ def get_set_shingles(text, keywords = 2):
     return shingles
 
 
-def generate_minhash_sign(shingles, num_hashes=20):
+def generate_minhash_sign(shingles, hash_a, hash_b, num_hash):
 
     # Compute a MinHash signature vector for a set of shingles
     prime = 9420858323   #random large prime number
@@ -49,25 +51,23 @@ def generate_minhash_sign(shingles, num_hashes=20):
     #standardize hashing to 32-bits positive number
     shingle_hashes = [hash(s) & 0xffffffff for s in shingles]
     if not shingle_hashes:
-        return [0] * num_hashes
+        return [0] * len(hash_a)
 
-    for i in range(num_hashes):
-        a = random.randint(1, 1000)
-        b = random.randint(0, 1000)
-
-        # using infiinty as a starting point for hash comparison
+    signature = []
+    for a, b in zip(hash_a, hash_b):
         min_val = float('inf')
         for sh in shingle_hashes:
-            h_val = (a * sh + b) % prime
-            if h_val < min_val:
-                min_val = h_val
+            hash_val = (a * sh + b) % prime
+            if hash_val < min_val:
+                min_val = hash_val
         signature.append(min_val)
 
     return signature
 
 
-def lsh_band(sig_matrix, file_names, num_bands=5):
-    # add LSH branding for scalability optimization
+
+def lsh_band(sig_matrix, file_names, num_bands):
+    # add LSH branding for optimization
     num_hashes, num_files = sig_matrix.shape
     rows_per_band = num_hashes // num_bands
 
@@ -115,15 +115,21 @@ if __name__ == "__main__":
             row.append(round(sim, 3))
         matrix_data.append(row)
 
+
     print(matrix_data)
+
+    # generate hashes globally once to prevent different hashes being used for comparison
+    num_hash = 100
+    hash_a = [random.randint(1, 1000) for _ in range(num_hash)]
+    hash_b = [random.randint(0, 1000) for _ in range(num_hash)]
 
     signatures = []
     for name in file_names:
-        sig = generate_minhash_sign(doc_shingles[name], num_hashes=100)
+        sig = generate_minhash_sign(doc_shingles[name], hash_a, hash_b,num_hash )
         signatures.append(sig)
 
     sig_matrix = np.array(signatures).T
-    candidates = lsh_band(sig_matrix, file_names, num_bands=20)
+    candidates = lsh_band(sig_matrix, file_names, num_bands=4)
 
     if candidates:
         for pair in candidates:
