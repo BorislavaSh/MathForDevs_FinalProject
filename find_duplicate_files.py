@@ -42,7 +42,7 @@ def get_set_shingles(text, keywords = 2):
     return shingles
 
 
-def generate_minhash_sign(shingles, hash_a, hash_b, num_hash):
+def generate_minhash_sign(shingles, hash_a, hash_b):
 
     # Compute a MinHash signature vector for a set of shingles
     prime = 9420858323   #random large prime number
@@ -53,7 +53,6 @@ def generate_minhash_sign(shingles, hash_a, hash_b, num_hash):
     if not shingle_hashes:
         return [0] * len(hash_a)
 
-    signature = []
     for a, b in zip(hash_a, hash_b):
         min_val = float('inf')
         for sh in shingle_hashes:
@@ -125,7 +124,7 @@ if __name__ == "__main__":
 
     signatures = []
     for name in file_names:
-        sig = generate_minhash_sign(doc_shingles[name], hash_a, hash_b,num_hash )
+        sig = generate_minhash_sign(doc_shingles[name], hash_a, hash_b)
         signatures.append(sig)
 
     sig_matrix = np.array(signatures).T
