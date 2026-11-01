@@ -32,12 +32,12 @@ def calculate_similarity_jaccard(set1, set2):
         return 0
     return intersection / union
 
-def get_set_shingles(text, keywords = 2):
+def get_set_shingles(text, k = 2):
     #Convert a string into a set of word shingles
     words = text.lower().split(" ")
     shingles = set()
-    for i in range(len(words) - keywords + 1):
-        word = " ".join(words[i:i + keywords])
+    for i in range(len(words) - k + 1):
+        word = " ".join(words[i:i + k])
         shingles.add(word)
     return shingles
 
